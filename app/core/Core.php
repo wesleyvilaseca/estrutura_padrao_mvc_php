@@ -19,32 +19,43 @@ class Core {
         call_user_func_array(array($c, $this->getMetodo()), $this->getParametros());
     }
 
-    public function verificaUri() {
-        //o metodo run vai ser o responsável por administrar o controller que vai ser executado
-        $url = explode("index.php", $_SERVER["PHP_SELF"]);
-        $url = end($url);
-
-        if ($url != "") {
-            $url = explode('/', $url);
-
-            //pega o controller
-            array_shift($url);
-            $this->controller = ucfirst($url[0]) . "Controller";
-
-            //pega o metodo
-            array_shift($url);
-            if (isset($url[0])) {
-                $this->metodo = $url[0];
-                //pega os parametros
-                array_shift($url);
-            }
-
-            if (isset($url[0])) {
-                //pega os parametros
-                $this->parametros = array_filter($url);
-            }
+    public function verificaUri()
+    {
+        if (EM_MANUTENCAO) {
+            $this->controller = 'MaintenanceController';
         } else {
-            $this->controller = ucfirst(CONTROLLER_PADRAO) . "Controller";
+            $url = explode("index.php", $_SERVER["PHP_SELF"]);
+            $url = end($url);
+            if ($url != "") {
+                $url = explode('/', $url);
+                array_shift($url);
+                if (strpos($url[0], '-') == true) {
+                    $route = explode('-', $url[0]);
+                    for ($i = 0; $i < sizeof($route); $i++) {
+                        ($i < (sizeof($route) - 1)) ? $this->route .= $route[$i] . '\\' : $this->controller = $this->route . ucfirst($route[$i]) . "Controller";
+                    }
+                } else {
+                    $this->controller = ucfirst($url[0]) . "Controller";
+                }
+                array_shift($url);
+                if (isset($url[0])) {
+                    $this->metodo = $url[0];
+                    array_shift($url);
+                }
+
+                if (isset($url[0])) {
+                    $this->parametros = array_filter($url);
+                }
+            } else {
+                if (strpos(CONTROLLER_PADRAO, '\\') == true) {
+                    $route = explode('\\', CONTROLLER_PADRAO);
+                    for ($i = 0; $i < sizeof($route); $i++) {
+                        ($i < (sizeof($route) - 1)) ? $this->route .= $route[$i] . '\\' : $this->controller = $this->route . ucfirst($route[$i]) . "Controller";
+                    }
+                } else {
+                    $this->controller = ucfirst(CONTROLLER_PADRAO) . "Controller";
+                }
+            }
         }
     }
 
